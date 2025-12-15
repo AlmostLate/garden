@@ -41,4 +41,4 @@ yarn-error.log*
 frontend/next-env.d.ts
 frontend/.next/
 frontend/node_modules/
-.idea/
+/.idea/

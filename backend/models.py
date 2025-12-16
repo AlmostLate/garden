@@ -10,6 +10,7 @@ class Garden(Base):
     __tablename__ = "gardens"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
+    area_hectares = Column(Integer)
     polygon = Column(JSON)
     location = Column(String)
     crop_type = Column(String)
@@ -34,6 +35,7 @@ class VegetationCycle(Base):
     __tablename__ = "vegetation_cycles"
     id = Column(Integer, primary_key=True, index=True)
     garden_id = Column(Integer, ForeignKey("gardens.id"), index=True)
+    date = None
 
     ndvi = Column(Float)
     evi = Column(Float)

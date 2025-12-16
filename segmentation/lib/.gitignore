@@ -1,0 +1,5 @@
+*.pth
+*.geojson
+*.jpg
+*.tif
+*.png

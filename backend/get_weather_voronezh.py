@@ -6,18 +6,13 @@ from datetime import datetime
 import calendar
 import warnings
 
-# Игнорируем предупреждения о депрекации
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-# Настройки для графиков
 plt.style.use('seaborn-v0_8-darkgrid')
 plt.rcParams['figure.figsize'] = [16, 12]
 plt.rcParams['font.size'] = 11
 
-def get_monthly_data_for_year(year):
-    """Получает и агрегирует данные по месяцам за указанный год"""
-    
-    # Координаты Воронежа
+def get_monthly_data_for_year(year):    
     latitude = 51.672
     longitude = 39.1843
     
@@ -59,7 +54,6 @@ def get_monthly_data_for_year(year):
         df['year'] = df['date'].dt.year
         df['month'] = df['date'].dt.month
         
-        # Группируем по месяцам
         monthly_data = df.groupby(['year', 'month']).agg({
             'temp_mean': 'mean',
             'humidity': 'mean',
@@ -79,7 +73,6 @@ def get_monthly_data_for_year(year):
         return None
 
 def collect_all_years_data(start_year=2010, end_year=2023):
-    """Собирает данные за все годы"""
     
     print(f"\nСбор данных за период {start_year}-{end_year}...")
     print("=" * 60)
@@ -97,7 +90,6 @@ def collect_all_years_data(start_year=2010, end_year=2023):
         print("Не удалось загрузить данные ни за один год")
         return None
     
-    # Объединяем все данные
     combined_df = pd.concat(all_data, ignore_index=True)
     
     print(f"\nИтого загружено:")
@@ -108,22 +100,18 @@ def collect_all_years_data(start_year=2010, end_year=2023):
     return combined_df
 
 def create_monthly_trend_plots(df, start_year, end_year):
-    """Создает 4 графика с трендами по месяцам за все годы"""
     
     if df is None or df.empty:
         print("Нет данных для создания графиков")
         return
     
-    # Создаем фигуру с 4 графиками
     fig, axes = plt.subplots(2, 2, figsize=(18, 14))
     
-    # Сортируем данные
     df = df.sort_values(['year', 'month'])
     
     # 1. ТЕМПЕРАТУРА: Тепловая карта по годам и месяцам
     ax1 = axes[0, 0]
     
-    # Создаем матрицу для тепловой карты (годы × месяцы)
     years = sorted(df['year'].unique())
     months = range(1, 13)
     
@@ -135,16 +123,13 @@ def create_monthly_trend_plots(df, start_year, end_year):
             if mask.any():
                 temp_matrix[idx_year, idx_month] = df.loc[mask, 'temp_mean'].values[0]
     
-    # Тепловая карта
     im = ax1.imshow(temp_matrix, cmap='RdYlBu_r', aspect='auto')
     
-    # Настройка осей
     ax1.set_xticks(np.arange(len(months)))
     ax1.set_xticklabels([calendar.month_abbr[m] for m in months])
     ax1.set_yticks(np.arange(len(years)))
     ax1.set_yticklabels([str(y) for y in years])
     
-    # Добавляем значения в ячейки
     for i in range(len(years)):
         for j in range(len(months)):
             if not np.isnan(temp_matrix[i, j]):
@@ -156,20 +141,16 @@ def create_monthly_trend_plots(df, start_year, end_year):
     ax1.set_xlabel('Месяц', fontsize=12)
     ax1.set_ylabel('Год', fontsize=12)
     
-    # Цветовая шкала
     plt.colorbar(im, ax=ax1, label='Температура (°C)')
     
     # 2. ВЛАЖНОСТЬ: График по годам с группировкой по месяцам
     ax2 = axes[0, 1]
     
-    # Создаем сводную таблицу
     humidity_pivot = df.pivot_table(index='year', columns='month', 
                                    values='humidity', aggfunc='mean')
     
-    # Сортируем столбцы по месяцам
     humidity_pivot = humidity_pivot.reindex(sorted(humidity_pivot.columns), axis=1)
     
-    # Создаем график
     colors = plt.cm.Set3(np.linspace(0, 1, 12))
     
     for month in range(1, 13):
@@ -190,14 +171,11 @@ def create_monthly_trend_plots(df, start_year, end_year):
     # 3. ДАВЛЕНИЕ: Месячные профили за все годы
     ax3 = axes[1, 0]
     
-    # Создаем сводную таблицу
     pressure_pivot = df.pivot_table(index='year', columns='month', 
                                    values='pressure', aggfunc='mean')
     
-    # Сортируем столбцы по месяцам
     pressure_pivot = pressure_pivot.reindex(sorted(pressure_pivot.columns), axis=1)
     
-    # Боксплот по месяцам
     boxplot_data = []
     month_labels = []
     
@@ -213,12 +191,10 @@ def create_monthly_trend_plots(df, start_year, end_year):
         # Исправленная строка: используем tick_labels вместо labels
         bp = ax3.boxplot(boxplot_data, patch_artist=True, tick_labels=month_labels)
         
-        # Цвета для boxplot
         for patch in bp['boxes']:
             patch.set_facecolor('lightgreen')
             patch.set_alpha(0.7)
         
-        # Добавляем средние значения
         for i, data in enumerate(boxplot_data):
             mean_val = np.mean(data)
             ax3.plot(i+1, mean_val, 'rD', markersize=8, label='Среднее' if i == 0 else "")
@@ -234,20 +210,15 @@ def create_monthly_trend_plots(df, start_year, end_year):
     # 4. ОСАДКИ: Накопительная диаграмма по годам
     ax4 = axes[1, 1]
     
-    # Группируем по годам и суммируем осадки
     yearly_precip = df.groupby('year')['precipitation'].sum().reset_index()
     
-    # Создаем stacked bar chart по месяцам
     precip_by_month = df.pivot_table(index='year', columns='month', 
                                     values='precipitation', aggfunc='sum', fill_value=0)
     
-    # Сортируем месяцы
     precip_by_month = precip_by_month.reindex(sorted(precip_by_month.columns), axis=1)
     
-    # Накопительная сумма для stacked chart
     bottom = np.zeros(len(precip_by_month))
     
-    # Цвета для месяцев
     month_colors = plt.cm.Blues(np.linspace(0.3, 0.9, 12))
     
     for idx, month in enumerate(range(1, 13)):
@@ -264,14 +235,12 @@ def create_monthly_trend_plots(df, start_year, end_year):
     ax4.grid(True, alpha=0.3, axis='y')
     ax4.legend(title='Месяц', ncol=3, fontsize=9, loc='upper left')
     
-    # Исправленная строка: используем end_year вместо end
     plt.suptitle(f'Анализ погоды в Воронеже: {start_year}-{end_year} годы', 
                 fontsize=18, fontweight='bold', y=1.02)
     
     plt.tight_layout()
     plt.show()
     
-    # Сохраняем график
     filename = f"voronezh_weather_{start_year}_{end_year}_monthly_trends.png"
     fig.savefig(filename, dpi=300, bbox_inches='tight')
     print(f"\nГрафики сохранены как: {filename}")
@@ -279,13 +248,11 @@ def create_monthly_trend_plots(df, start_year, end_year):
     return fig
 
 def create_statistics_summary(df, start_year, end_year):
-    """Создает сводную статистику"""
     
     print("\n" + "="*60)
     print("СВОДНАЯ СТАТИСТИКА")
     print("="*60)
     
-    # Средние значения по годам
     yearly_stats = df.groupby('year').agg({
         'temp_mean': ['mean', 'min', 'max'],
         'humidity': 'mean',
@@ -296,7 +263,6 @@ def create_statistics_summary(df, start_year, end_year):
     print("\nСредние значения по годам:")
     print(yearly_stats)
     
-    # Средние значения по месяцам за весь период
     monthly_stats = df.groupby('month').agg({
         'temp_mean': 'mean',
         'humidity': 'mean',
@@ -309,12 +275,10 @@ def create_statistics_summary(df, start_year, end_year):
     print("\nСредние значения по месяцам за весь период:")
     print(monthly_stats[['month_name', 'temp_mean', 'humidity', 'pressure', 'precipitation']])
     
-    # Тренды
     print("\n" + "="*60)
     print("АНАЛИЗ ТРЕНДОВ")
     print("="*60)
     
-    # Линейные тренды
     years = df['year'].unique()
     
     for param, label in [('temp_mean', 'Температура'), 
@@ -331,7 +295,6 @@ def create_statistics_summary(df, start_year, end_year):
             trend_direction = "повышается" if slope > 0 else "понижается"
             print(f"{label}: {trend_direction} на {abs(slope):.3f} единиц в год")
     
-    # Сохраняем данные
     csv_filename = f"voronezh_weather_{start_year}_{end_year}_monthly.csv"
     df.to_csv(csv_filename, index=False, encoding='utf-8-sig')
     print(f"\nДанные сохранены как: {csv_filename}")
@@ -339,22 +302,18 @@ def create_statistics_summary(df, start_year, end_year):
     return yearly_stats, monthly_stats
 
 def create_additional_visualizations(df, start_year, end_year):
-    """Создает дополнительные визуализации"""
     
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     
     # 1. Аномалии температуры
     ax1 = axes[0, 0]
     
-    # Рассчитываем среднюю температуру за весь период для каждого месяца
     monthly_norm = df.groupby('month')['temp_mean'].mean().reset_index()
     monthly_norm.columns = ['month', 'norm_temp']
     
-    # Объединяем с исходными данными
     df_with_norm = pd.merge(df, monthly_norm, on='month')
     df_with_norm['temp_anomaly'] = df_with_norm['temp_mean'] - df_with_norm['norm_temp']
     
-    # Группируем по годам
     yearly_anomaly = df_with_norm.groupby('year')['temp_anomaly'].mean()
     
     ax1.bar(yearly_anomaly.index, yearly_anomaly.values, 
@@ -368,14 +327,12 @@ def create_additional_visualizations(df, start_year, end_year):
     # 2. Сезонные циклы
     ax2 = axes[0, 1]
     
-    # Средние значения по месяцам за весь период
     monthly_avg = df.groupby('month').agg({
         'temp_mean': 'mean',
         'humidity': 'mean',
         'precipitation': 'mean'
     }).reset_index()
     
-    # Нормализуем для сравнения
     for col in ['temp_mean', 'humidity', 'precipitation']:
         monthly_avg[f'{col}_norm'] = (monthly_avg[col] - monthly_avg[col].min()) / \
                                     (monthly_avg[col].max() - monthly_avg[col].min())
@@ -405,7 +362,6 @@ def create_additional_visualizations(df, start_year, end_year):
     
     im = ax3.imshow(correlation, cmap='coolwarm', vmin=-1, vmax=1)
     
-    # Добавляем значения
     for i in range(len(correlation)):
         for j in range(len(correlation)):
             text = ax3.text(j, i, f'{correlation.iloc[i, j]:.2f}',
@@ -423,7 +379,6 @@ def create_additional_visualizations(df, start_year, end_year):
     
     yearly_avg_temp = df.groupby('year')['temp_mean'].mean().sort_values()
     
-    # Берем 5 самых теплых и 5 самых холодных лет
     coldest_years = yearly_avg_temp.head(5)
     warmest_years = yearly_avg_temp.tail(5)
     
@@ -439,7 +394,6 @@ def create_additional_visualizations(df, start_year, end_year):
     ax4.set_title('Самые холодные и теплые годы', fontsize=14, fontweight='bold')
     ax4.grid(True, alpha=0.3, axis='x')
     
-    # Добавляем значения на столбцы
     for i, (temp, year) in enumerate(zip(temps_list, years_list)):
         ax4.text(temp + 0.1, i, f'{temp:.1f}°C', 
                 va='center', fontsize=9, fontweight='bold')
@@ -449,7 +403,6 @@ def create_additional_visualizations(df, start_year, end_year):
     plt.tight_layout()
     plt.show()
     
-    # Сохраняем
     filename = f"voronezh_weather_{start_year}_{end_year}_analysis.png"
     fig.savefig(filename, dpi=300, bbox_inches='tight')
     print(f"Дополнительные графики сохранены как: {filename}")
@@ -460,7 +413,6 @@ if __name__ == "__main__":
     print("АНАЛИЗ ПОГОДЫ В ВОРОНЕЖЕ ПО МЕСЯЦАМ (2010-2023)")
     print("="*70)
     
-    # Параметры анализа
     START_YEAR = 2010
     END_YEAR = 2023
     
@@ -493,7 +445,6 @@ if __name__ == "__main__":
         print("\nКЛЮЧЕВЫЕ ФАКТЫ:")
         print("-" * 40)
         
-        # Самый теплый и холодный год
         warmest_year = yearly_stats[('temp_mean', 'mean')].idxmax()
         warmest_temp = yearly_stats[('temp_mean', 'mean')].max()
         coldest_year = yearly_stats[('temp_mean', 'mean')].idxmin()
@@ -502,7 +453,6 @@ if __name__ == "__main__":
         print(f"Самый теплый год: {warmest_year} ({warmest_temp}°C)")
         print(f"Самый холодный год: {coldest_year} ({coldest_temp}°C)")
         
-        # Самый влажный и сухой год по осадкам
         wettest_year = yearly_stats[('precipitation', 'sum')].idxmax()
         wettest_precip = yearly_stats[('precipitation', 'sum')].max()
         driest_year = yearly_stats[('precipitation', 'sum')].idxmin()
@@ -511,7 +461,6 @@ if __name__ == "__main__":
         print(f"Самый влажный год: {wettest_year} ({wettest_precip:.0f} мм осадков)")
         print(f"Самый сухой год: {driest_year} ({driest_precip:.0f} мм осадков)")
         
-        # Самый теплый и холодный месяц в среднем
         warmest_month_idx = monthly_stats['temp_mean'].idxmax()
         warmest_month = calendar.month_name[warmest_month_idx]
         warmest_month_temp = monthly_stats.loc[warmest_month_idx, 'temp_mean']

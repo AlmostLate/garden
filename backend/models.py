@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 
-# Садовый квартал
+
 class Garden(Base):
     __tablename__ = "gardens"
     id = Column(Integer, primary_key=True, index=True)
@@ -30,7 +30,6 @@ class Garden(Base):
     predictions = relationship("Prediction", back_populates="garden")
 
 
-# Вегетативный цикл
 class VegetationCycle(Base):
     __tablename__ = "vegetation_cycles"
     id = Column(Integer, primary_key=True, index=True)
@@ -57,7 +56,7 @@ class VegetationCycle(Base):
 
     garden = relationship("Garden", back_populates="vegetation_cycles")
 
-# Прогноз урожая
+
 class Prediction(Base):
     __tablename__ = "predictions"
     id = Column(Integer, primary_key=True, index=True)
@@ -82,7 +81,6 @@ class Prediction(Base):
 
     garden = relationship("Garden", back_populates="predictions")
 
-# Job выполнения
 class Job(Base):
     __tablename__ = "jobs"
     id = Column(Integer, primary_key=True, index=True)

@@ -53,11 +53,9 @@ async def get_ndvi_history(
 
 @app.get("/gardens/{garden_id}/dashboard_stat", response_model=DashboardStats)
 async def get_dashboard_stats(db: Session = Depends(get_db)):
-    # Общая статистика
     total_gardens = db.query(func.count(Garden.id)).scalar()
     total_area = db.query(func.sum(Garden.area_hectares)).scalar() or 0
 
-    # Подсчет по зонам урожайности
     zones_count = db.query(
         Garden.productivity_zone,
         func.count(Garden.id)

@@ -87,12 +87,10 @@ class GardenResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    # Поля для дальнейшего вычисления
     soil_texture_name: Optional[str] = None
     soil_drainage_class: Optional[str] = None
     is_well_drained: Optional[bool] = None
 
-    # Статистика
     vegetation_cycle_count: Optional[int] = 0
     last_prediction: Optional[float] = None
     last_prediction_date: Optional[datetime] = None
@@ -107,16 +105,15 @@ class VegetationCycleCreate(BaseModel):
     evi: Optional[float] = Field(None, ge=-1, le=1)
     ndwi: Optional[float] = Field(None, ge=-1, le=1)
     temperature_2m: Optional[float] = None  # в °C
-    soil_moisture_10cm: Optional[float] = Field(None, ge=0, le=1)  # м³/м³
-    soil_moisture_30cm: Optional[float] = Field(None, ge=0, le=1)  # м³/м³
-    precipitation: Optional[float] = Field(None, ge=0)  # мм
-    solar_radiation: Optional[float] = Field(None, ge=0)  # Вт/м²
-    gdd: Optional[float] = Field(None, ge=0)  # Growing Degree Days
-    water_deficit: Optional[float] = None  # мм
+    soil_moisture_10cm: Optional[float] = Field(None, ge=0, le=1)
+    soil_moisture_30cm: Optional[float] = Field(None, ge=0, le=1)
+    precipitation: Optional[float] = Field(None, ge=0)
+    solar_radiation: Optional[float] = Field(None, ge=0)
+    gdd: Optional[float] = Field(None, ge=0)
+    water_deficit: Optional[float] = None
     is_peak_vegetation: bool = False
     is_stress_period: bool = False
 
-    # Автоматическая установка даты
     date: Optional[date] = None
 
     @field_validator('date', mode='before')
@@ -155,7 +152,6 @@ class VegetationCycleResponse(BaseModel):
     is_stress_period: bool
     created_at: datetime
 
-    # Связанные данные
     garden_name: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -363,13 +359,10 @@ class Validators:
     @staticmethod
     def get_drainage_class(code: int) -> str:
         """Определить класс дренажа по типу почвы"""
-        # Хороший дренаж
         if code in [1, 2, 3, 4]:
             return "хороший"
-        # Умеренный дренаж
         elif code in [5, 6]:
             return "умеренный"
-        # Плохой дренаж
         else:
             return "плохой"
 
